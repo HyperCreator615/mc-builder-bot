@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>AI Bot Dashboard</title>
+</head>
+<body class="bg-black text-white p-10 font-sans">
+    <div class="max-w-xl mx-auto border-2 border-green-500 p-8 rounded-2xl shadow-[0_0_20px_rgba(34,197,94,0.3)]">
+        <h1 class="text-3xl font-bold text-green-400 mb-6">M.A.I.D (Minecraft AI Deployment)</h1>
+        
+        <div class="grid grid-cols-2 gap-4">
+            <div>
+                <label class="block text-xs uppercase text-gray-400">Server IP</label>
+                <input id="ip" type="text" class="w-full bg-gray-900 border border-gray-700 p-2 rounded mt-1" placeholder="play.hypixel.net">
+            </div>
+            <div>
+                <label class="block text-xs uppercase text-gray-400">Port</label>
+                <input id="port" type="number" value="25565" class="w-full bg-gray-900 border border-gray-700 p-2 rounded mt-1">
+            </div>
+        </div>
+
+        <div class="mt-4">
+            <label class="block text-xs uppercase text-gray-400">Bot Name</label>
+            <input id="botName" type="text" class="w-full bg-gray-900 border border-gray-700 p-2 rounded mt-1" placeholder="AI_Architect">
+        </div>
+
+        <div class="mt-4">
+            <label class="block text-xs uppercase text-gray-400">OpenRouter API Key</label>
+            <input id="apiKey" type="password" class="w-full bg-gray-900 border border-gray-700 p-2 rounded mt-1" placeholder="sk-or-v1-...">
+        </div>
+
+        <div class="mt-4">
+            <label class="block text-xs uppercase text-gray-400">Model ID</label>
+            <input id="modelId" type="text" value="google/gemini-2.0-flash-001" class="w-full bg-gray-900 border border-gray-700 p-2 rounded mt-1">
+        </div>
+
+        <button onclick="launchBot()" class="w-full mt-8 bg-green-600 hover:bg-green-500 text-black font-black py-4 rounded-lg transition-all transform hover:scale-105">
+            INITIATE AI DEPLOYMENT
+        </button>
+    </div>
+
+    <script>
+        async function launchBot() {
+            // This is the logic to trigger GitHub Actions
+            const GITHUB_TOKEN = "YOUR_PERSONAL_ACCESS_TOKEN"; 
+            const REPO_OWNER = "YOUR_GITHUB_USERNAME";
+            const REPO_NAME = "YOUR_REPO_NAME";
+
+            const payload = {
+                ref: "main",
+                inputs: {
+                    ip: document.getElementById('ip').value,
+                    port: document.getElementById('port').value,
+                    name: document.getElementById('botName').value,
+                    apiKey: document.getElementById('apiKey').value,
+                    model: document.getElementById('modelId').value
+                }
+            };
+
+            await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/actions/workflows/main.yml/dispatches`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${GITHUB_TOKEN}`,
+                    'Accept': 'application/vnd.github.v3+json'
+                },
+                body: JSON.stringify(payload)
+            });
+            alert("Bot Signal Sent! Check GitHub Actions tab.");
+        }
+    </script>
+</body>
+</html>
