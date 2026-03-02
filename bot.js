@@ -6,12 +6,12 @@ const bot = mineflayer.createBot({
     host: process.env.MC_IP,
     port: parseInt(process.env.MC_PORT) || 25565,
     username: process.env.BOT_NAME || 'AI_Architect',
-    version: "1.21.11", 
+    version: "1.21.1", 
     auth: 'offline',   // Required for Aternos Cracked servers
     checkTimeoutInterval: 60000 // Helps stay connected on slow servers
 });
 
-console.log(`Attempting to join 1.21.11 server: ${process.env.MC_IP}`);
+console.log(`Attempting to join 1.21.1 server: ${process.env.MC_IP}`);
 
 bot.on('spawn', () => {
     console.log("SUCCESS: Bot is in the server!");
