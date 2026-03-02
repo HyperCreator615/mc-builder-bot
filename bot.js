@@ -1,29 +1,32 @@
 const mineflayer = require('mineflayer');
 const fetch = require('node-fetch');
 
-// Setting up the bot
 const bot = mineflayer.createBot({
     host: process.env.MC_IP,
     port: parseInt(process.env.MC_PORT) || 25565,
     username: process.env.BOT_NAME || 'AI_Architect',
     version: "1.21.1", 
-    auth: 'offline',   // Required for Aternos Cracked servers
-    checkTimeoutInterval: 60000 // Helps stay connected on slow servers
+    auth: 'offline',
+    // THIS IS THE FIX: It slows down the join speed so Aternos doesn't reset the connection
+    connectTimeout: 30000,
+    hideErrors: false
 });
 
-console.log(`Attempting to join 1.21.1 server: ${process.env.MC_IP}`);
+console.log(`Connecting to ${process.env.MC_IP} on 1.21.1...`);
 
+// Aternos Fix: Wait 5 seconds after joining to send the first message
 bot.on('spawn', () => {
-    console.log("SUCCESS: Bot is in the server!");
-    bot.chat("I am the AI Architect. Type !build [anything] and I will design it in 3D!");
+    setTimeout(() => {
+        console.log("SUCCESS: Bot is in!");
+        bot.chat("AI Architect has arrived. Type !build [thing]!");
+    }, 5000);
 });
 
 bot.on('chat', async (username, message) => {
     if (username === bot.username) return;
-
     if (message.startsWith('!build')) {
-        const thingToBuild = message.replace('!build', '').trim();
-        bot.chat(`Generating 3D blueprint for: ${thingToBuild}...`);
+        const item = message.replace('!build', '').trim();
+        bot.chat(`AI Designing: ${item}...`);
 
         try {
             const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
@@ -36,45 +39,28 @@ bot.on('chat', async (username, message) => {
                     model: process.env.AI_MODEL || "google/gemini-2.0-flash-001",
                     messages: [{
                         role: "user", 
-                        content: `You are a Minecraft 3D builder. Create a small ${thingToBuild}. 
-                        Return ONLY a JSON array of blocks. Use relative coordinates. 
-                        Example format: [{"x":0,"y":1,"z":0,"block":"stone"}]`
+                        content: `Give me a JSON array for a tiny ${item}. Format: [{"x":0,"y":1,"z":0,"block":"stone"}]`
                     }]
                 })
             });
-
             const data = await response.json();
-            const aiText = data.choices[0].message.content;
-            
-            // Extract JSON from AI response
-            const blocks = JSON.parse(aiText.substring(aiText.indexOf('['), aiText.lastIndexOf(']') + 1));
-
-            bot.chat(`AI blueprint received! Placing ${blocks.length} blocks.`);
+            const blocks = JSON.parse(data.choices[0].message.content.match(/\[.*\]/s)[0]);
 
             for (const b of blocks) {
-                // This simulates the building by announcing coords. 
-                // In your video, you can show the bot 'calculating' the 3D space.
                 bot.chat(`Placing ${b.block} at ${b.x}, ${b.y}, ${b.z}`);
-                // Small delay to prevent spam kick
-                await new Promise(res => setTimeout(res, 500)); 
+                await new Promise(r => setTimeout(r, 800)); 
             }
-            bot.chat("Build complete!");
-
-        } catch (err) {
-            console.log("AI Error:", err);
-            bot.chat("My AI brain is lagging. Check the API Key!");
-        }
+        } catch (e) { bot.chat("AI error. Check OpenRouter Key!"); }
     }
 });
 
-// Keep-Alive Loop: Swings arm every 20 seconds so Aternos doesn't kick for AFK
-setInterval(() => {
-    if (bot.entity) {
-        bot.swingArm('right');
-        console.log("Heartbeat: Bot is active.");
-    }
-}, 20000);
+// Aternos Anti-Kick Loop
+setInterval(() => { if (bot.entity) bot.setControlState('jump', true); setTimeout(()=>bot.setControlState('jump', false), 500); }, 15000);
 
-// Error Handling to see why it fails
-bot.on('error', (err) => console.log("Bot Error:", err));
-bot.on('kicked', (reason) => console.log("Kicked from server:", reason));
+bot.on('error', (err) => {
+    if (err.code === 'ECONNRESET') {
+        console.log("!!! ATERNOS BLOCKED US !!! - Try restarting your Aternos server now.");
+    } else {
+        console.log("Error:", err);
+    }
+});
