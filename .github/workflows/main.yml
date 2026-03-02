@@ -1,0 +1,26 @@
+name: 24/7 Minecraft AI Bot
+on:
+  workflow_dispatch:
+    inputs:
+      ip: { required: true }
+      port: { required: true }
+      name: { required: true }
+      apiKey: { required: true }
+      model: { required: true }
+
+jobs:
+  run-bot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm install mineflayer
+      - run: node bot.js
+        env:
+          MC_IP: ${{ github.event.inputs.ip }}
+          MC_PORT: ${{ github.event.inputs.ip }}
+          BOT_NAME: ${{ github.event.inputs.name }}
+          AI_KEY: ${{ github.event.inputs.apiKey }}
+          AI_MODEL: ${{ github.event.inputs.model }}
