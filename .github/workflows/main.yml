@@ -7,6 +7,8 @@ on:
       name: { required: true }
       apiKey: { required: true }
       model: { required: true }
+  repository_dispatch:
+    types: [spawn_bot]
 
 jobs:
   run-bot:
@@ -16,11 +18,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - run: npm install mineflayer
-      - run: node bot.js
+      - name: Install Tools
+        run: npm install mineflayer node-fetch@2
+      - name: Launch Bot
+        run: node bot.js
         env:
-          MC_IP: ${{ github.event.inputs.ip }}
-          MC_PORT: ${{ github.event.inputs.ip }}
-          BOT_NAME: ${{ github.event.inputs.name }}
-          AI_KEY: ${{ github.event.inputs.apiKey }}
-          AI_MODEL: ${{ github.event.inputs.model }}
+          MC_IP: ${{ github.event.inputs.ip || github.event.client_payload.ip }}
+          MC_PORT: ${{ github.event.inputs.port || github.event.client_payload.port }}
+          BOT_NAME: ${{ github.event.inputs.name || github.event.client_payload.name }}
+          AI_KEY: ${{ github.event.inputs.apiKey || github.event.client_payload.apiKey }}
+          AI_MODEL: ${{ github.event.inputs.model || github.event.client_payload.model }}
